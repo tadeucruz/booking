@@ -3,8 +3,8 @@ CREATE TABLE IF NOT EXISTS bookings
      id         VARCHAR(36) PRIMARY KEY,
      room_id    VARCHAR(36),
      user_id    VARCHAR(36),
-     start_date TIMESTAMP,
-     end_date   TIMESTAMP
+     start_date DATETIME,
+     end_date   DATETIME
   )
 engine=innodb;
 
