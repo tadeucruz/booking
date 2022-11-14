@@ -1,15 +1,17 @@
 package com.tadeucruz.booking.controller;
 
 import com.tadeucruz.booking.model.rest.BookingResponse;
+import com.tadeucruz.booking.model.rest.ReservationBookingRequest;
 import com.tadeucruz.booking.service.BookingService;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,12 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class BookingController {
 
-    private BookingService bookingService;
+    private final BookingService bookingService;
+    private final ModelMapper modelMapper;
 
     @GetMapping
     public ResponseEntity<List<BookingResponse>> getAllReservation() {
-
-        var modelMapper = new ModelMapper();
 
         var bookings = bookingService.getAllBooking();
 
@@ -33,15 +34,25 @@ public class BookingController {
         return ResponseEntity.ok(bookingResponses);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<BookingResponse> getBookingById(@PathVariable UUID id) {
+
+        var booking = bookingService.getBookingById(id);
+
+        var bookingResponse = modelMapper.map(booking, BookingResponse.class);
+
+        return ResponseEntity.ok(bookingResponse);
+    }
+
     @PostMapping
-    public ResponseEntity<BookingResponse> createReservation() {
+    public ResponseEntity<BookingResponse> createBooking(
+        @RequestBody ReservationBookingRequest request) {
 
-        var modelMapper = new ModelMapper();
-
-        var now = LocalDateTime.now().minusDays(5);
-
-        var booking = bookingService.createBooking(UUID.randomUUID(), UUID.randomUUID(), now,
-            now.plusDays(6));
+        var booking = bookingService.createBooking(
+            UUID.fromString(request.getUserId()),
+            request.getStartDate().atStartOfDay(),
+            request.getEndDate().atStartOfDay().plusDays(1).minusSeconds(1)
+        );
 
         var bookingResponse = modelMapper.map(booking, BookingResponse.class);
 

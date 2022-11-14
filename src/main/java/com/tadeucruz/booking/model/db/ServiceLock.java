@@ -10,12 +10,12 @@ import javax.persistence.Version;
 @Table(name = "services_locks")
 public class ServiceLock {
 
-  @Id
-  @GeneratedValue
-  private Long id;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-  private String name;
+    private String name;
 
-  @Version
-  private Long version;
+    @Version
+    private Long version;
 }

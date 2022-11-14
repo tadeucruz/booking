@@ -22,21 +22,21 @@ import org.hibernate.annotations.Type;
 @NoArgsConstructor
 public class Booking {
 
-  @Id
-  @Type(type = "uuid-char")
-  private UUID id;
+    @Id
+    @Type(type = "uuid-char")
+    private UUID id;
 
-  @Column(name = "room_id")
-  @Type(type = "uuid-char")
-  private UUID roomId;
+    @Column(name = "room_id")
+    @Type(type = "uuid-char")
+    private UUID roomId;
 
-  @Column(name = "user_id")
-  @Type(type = "uuid-char")
-  private UUID userId;
+    @Column(name = "user_id")
+    @Type(type = "uuid-char")
+    private UUID userId;
 
-  @Column(name = "start_date")
-  private LocalDateTime startDate;
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
 
-  @Column(name = "end_date")
-  private LocalDateTime endDate;
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
 }

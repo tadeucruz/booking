@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Lock;
 
 public interface ServiceLockRepository extends JpaRepository<ServiceLock, Long> {
 
-  @Lock(PESSIMISTIC_WRITE)
-  List<ServiceLock> findByName(String name);
+    @Lock(PESSIMISTIC_WRITE)
+    List<ServiceLock> findByName(String name);
 
 }
