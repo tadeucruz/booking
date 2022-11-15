@@ -252,8 +252,6 @@ class BookingServiceTest {
 
         var roomId = 1;
         var userId = 1;
-        var startDate = LocalDate.now().plusDays(1).atStartOfDay();
-        var endDate = startDate.plusDays(1).minusSeconds(1);
         var maxDaysAdvance = 30;
         var maxDayInRow = 3;
 
