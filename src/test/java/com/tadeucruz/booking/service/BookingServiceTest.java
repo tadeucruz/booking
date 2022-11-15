@@ -5,6 +5,7 @@ import static com.tadeucruz.booking.enums.BookingStatus.CANCELED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,7 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
 
-    private static final LocalDateTime startDate = LocalDate.now().atStartOfDay();
+    private static final LocalDateTime startDate = LocalDate.now().plusDays(1).atStartOfDay();
     private static final LocalDateTime endDate = startDate.plusDays(1).minusSeconds(1);
 
     @InjectMocks
@@ -244,6 +245,39 @@ class BookingServiceTest {
             errorMessage
         );
 
+    }
+
+    @Test
+    void test_createBooking_Success() {
+
+        var roomId = 1;
+        var userId = 1;
+        var startDate = LocalDate.now().plusDays(1).atStartOfDay();
+        var endDate = startDate.plusDays(1).minusSeconds(1);
+        var maxDaysAdvance = 30;
+        var maxDayInRow = 3;
+
+        var expectedBooking = buildBooking();
+
+        when(bookingConfig.getMaxDaysAdvance()).thenReturn(maxDaysAdvance);
+        when(bookingConfig.getMaxDaysInRow()).thenReturn(maxDayInRow);
+
+        when(bookingRepository.findByRoomIdAndStatusAndStartDateBetween(
+            roomId, ACTIVATED, startDate, endDate)).thenReturn(List.of());
+        when(bookingRepository.findByRoomIdAndStatusAndEndDateBetween(
+            roomId, ACTIVATED, startDate, endDate)).thenReturn(List.of());
+        when(bookingRepository.findByRoomIdAndStatusAndBetweenStartDateAndEndDate(
+            roomId, ACTIVATED, startDate, endDate)).thenReturn(List.of());
+
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(i -> {
+            var tmpBooking = (Booking) i.getArguments()[0];
+            tmpBooking.setId(1);
+            return tmpBooking;
+        });
+
+        var result = bookingService.createBooking(roomId, userId, startDate, endDate);
+
+        assertEquals(expectedBooking, result);
     }
 
     private Booking buildBooking() {
