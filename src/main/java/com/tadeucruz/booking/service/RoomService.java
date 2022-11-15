@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 public class RoomService {
 
     private final RoomClient roomClient;
+    private final MessageSourceService messageSourceService;
 
     public void checkIfRoomExistsAndEnabled(Integer roomId) {
 
@@ -24,7 +25,9 @@ public class RoomService {
         var roomResponse = optionalRoomResponse.get();
 
         if (!ENABLED.name().equals(roomResponse.getStatus())) {
-            throw new RoomNotFoundException();
+            throw new RoomNotFoundException(
+                messageSourceService.getMessage("booking.room.invalid.id", roomId)
+            );
         }
     }
 }

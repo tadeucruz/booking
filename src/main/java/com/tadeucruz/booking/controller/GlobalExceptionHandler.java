@@ -5,6 +5,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import com.tadeucruz.booking.exception.BookingConflictException;
 import com.tadeucruz.booking.exception.BookingInvalidDates;
 import com.tadeucruz.booking.exception.BookingNotFoundException;
+import com.tadeucruz.booking.exception.RoomNotFoundException;
 import com.tadeucruz.booking.model.rest.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(BookingInvalidDates.class)
     public ResponseEntity<ErrorResponse> handleBookingInvalidDates(Exception exception) {
+        return buildErrorResponse(exception, BAD_REQUEST);
+    }
+
+    @ExceptionHandler(RoomNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleRoomNotFoundException(Exception exception) {
         return buildErrorResponse(exception, BAD_REQUEST);
     }
 
