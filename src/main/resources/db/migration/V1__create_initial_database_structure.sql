@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS bookings
   (
-     id         VARCHAR(36) PRIMARY KEY,
-     room_id    VARCHAR(36),
-     user_id    VARCHAR(36),
+     id         INT PRIMARY KEY AUTO_INCREMENT,
+     room_id    INT,
+     user_id    INT,
+     status     VARCHAR(36),
      start_date DATETIME,
      end_date   DATETIME
   )
