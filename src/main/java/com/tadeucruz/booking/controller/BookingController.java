@@ -2,7 +2,7 @@ package com.tadeucruz.booking.controller;
 
 import com.tadeucruz.booking.model.rest.BookingAvailabilityResponse;
 import com.tadeucruz.booking.model.rest.BookingResponse;
-import com.tadeucruz.booking.model.rest.ReservationBookingRequest;
+import com.tadeucruz.booking.model.rest.CreateBookingRequest;
 import com.tadeucruz.booking.service.BookingService;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -44,16 +44,26 @@ public class BookingController {
         return ResponseEntity.ok(bookingResponse);
     }
 
-    @PostMapping("/{roomId}")
-    public ResponseEntity<BookingResponse> createBooking(@PathVariable Integer roomId,
-        @RequestBody ReservationBookingRequest request) {
+    @PostMapping
+    public ResponseEntity<BookingResponse> createBooking(
+        @RequestBody CreateBookingRequest request) {
 
         var booking = bookingService.createBooking(
-            roomId,
+            request.getRoomId(),
             request.getUserId(),
             request.getStartDate().atStartOfDay(),
             request.getEndDate().atStartOfDay().plusDays(1).minusSeconds(1)
         );
+
+        var bookingResponse = modelMapper.map(booking, BookingResponse.class);
+
+        return ResponseEntity.ok(bookingResponse);
+    }
+
+    @PostMapping("{bookingId}/cancel")
+    public ResponseEntity<BookingResponse> cancelBooking(@PathVariable Integer bookingId) {
+
+        var booking = bookingService.cancelBooking(bookingId);
 
         var bookingResponse = modelMapper.map(booking, BookingResponse.class);
 

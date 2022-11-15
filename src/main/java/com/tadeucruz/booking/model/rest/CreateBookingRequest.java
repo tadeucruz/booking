@@ -6,8 +6,9 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ReservationBookingRequest {
+public class CreateBookingRequest {
 
+    private Integer roomId;
     private Integer userId;
     private LocalDate startDate;
     private LocalDate endDate;

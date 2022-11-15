@@ -1,6 +1,7 @@
 package com.tadeucruz.booking.service;
 
 import static com.tadeucruz.booking.enums.BookingStatus.ACTIVATED;
+import static com.tadeucruz.booking.enums.BookingStatus.CANCELED;
 import static com.tadeucruz.booking.enums.ServiceLockTypes.RESERVATIONS;
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -32,6 +33,58 @@ public class BookingService {
     private final MessageSourceService messageSourceService;
     private final BookingConfig bookingConfig;
 
+
+    public List<Booking> getAllBooking() {
+
+        return bookingRepository.findAll();
+    }
+
+    public Booking getBookingById(Integer id) {
+        var optionalBooking = getOptionalBookingById(id);
+
+        if (optionalBooking.isEmpty()) {
+            throw new BookingNotFoundException(
+                messageSourceService.getMessage("booking.invalid.id", id));
+        }
+
+        return optionalBooking.get();
+    }
+
+    public Optional<Booking> getOptionalBookingById(Integer id) {
+
+        return bookingRepository.findById(id);
+    }
+
+    @Transactional
+    public Booking createBooking(Integer roomId, Integer userId, LocalDateTime startDate,
+        LocalDateTime endTime) {
+
+        serviceLockRepository.findByName(RESERVATIONS.name());
+
+        roomService.checkIfRoomExistsAndEnabled(roomId);
+        // TODO: Need check for userService if user exist
+
+        checkIfBookingDatesAreValid(roomId, startDate, endTime);
+
+        var booking = Booking.builder()
+            .roomId(roomId)
+            .userId(userId)
+            .startDate(startDate)
+            .endDate(endTime)
+            .status(ACTIVATED)
+            .build();
+
+        return bookingRepository.save(booking);
+    }
+
+    public Booking cancelBooking(Integer bookingId) {
+
+        var booking = getBookingById(bookingId);
+
+        booking.setStatus(CANCELED);
+
+        return bookingRepository.save(booking);
+    }
 
     public List<BookingAvailabilityResponse> getFreeTimes(Integer roomId) {
 
@@ -69,49 +122,6 @@ public class BookingService {
         }
 
         return result;
-    }
-
-    public List<Booking> getAllBooking() {
-
-        return bookingRepository.findAll();
-    }
-
-    public Booking getBookingById(Integer id) {
-        var optionalBooking = getOptionalBookingById(id);
-
-        if (optionalBooking.isEmpty()) {
-            throw new BookingNotFoundException(
-                messageSourceService.getMessage("booking.invalid.id", id));
-        }
-
-        return optionalBooking.get();
-    }
-
-    public Optional<Booking> getOptionalBookingById(Integer id) {
-
-        return bookingRepository.findById(id);
-    }
-
-    @Transactional
-    public Booking createBooking(Integer roomId, Integer userId, LocalDateTime startDate,
-        LocalDateTime endTime) {
-
-        serviceLockRepository.findByName(RESERVATIONS.name());
-
-        roomService.checkIfRoomExistsAndEnabled(roomId);
-        // TODO: Need check for userService if user exist
-
-        checkIfBookingDatesAreValid(roomId, startDate, endTime);
-
-        var reservation = Booking.builder()
-            .roomId(roomId)
-            .userId(userId)
-            .startDate(startDate)
-            .endDate(endTime)
-            .status(ACTIVATED)
-            .build();
-
-        return bookingRepository.save(reservation);
     }
 
     private void checkIfBookingDatesAreValid(Integer roomId, LocalDateTime startDate,
