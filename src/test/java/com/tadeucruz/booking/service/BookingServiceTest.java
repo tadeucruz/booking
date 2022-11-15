@@ -400,6 +400,39 @@ class BookingServiceTest {
 
     }
 
+    @Test
+    void test_updateBooking_success() {
+
+        var roomId = 1;
+        var bookingId = 1;
+        var maxDaysAdvance = 30;
+        var maxDayInRow = 3;
+
+        var expectedBooking = buildBooking();
+
+        var booking = buildBooking();
+        booking.setStartDate(LocalDateTime.MAX);
+        booking.setEndDate(LocalDateTime.MAX);
+
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+        when(bookingConfig.getMaxDaysAdvance()).thenReturn(maxDaysAdvance);
+        when(bookingConfig.getMaxDaysInRow()).thenReturn(maxDayInRow);
+
+        when(bookingRepository.findByRoomIdAndStatusAndStartDateBetween(
+            roomId, ACTIVATED, startDate, endDate)).thenReturn(List.of(buildBooking()));
+        when(bookingRepository.findByRoomIdAndStatusAndEndDateBetween(
+            roomId, ACTIVATED, startDate, endDate)).thenReturn(List.of(buildBooking()));
+        when(bookingRepository.findByRoomIdAndStatusAndBetweenStartDateAndEndDate(
+            roomId, ACTIVATED, startDate, endDate)).thenReturn(List.of(buildBooking()));
+
+        when(bookingRepository.save(booking)).thenReturn(booking);
+
+        var result = bookingService.updateBooking(roomId, startDate, endDate);
+
+        assertEquals(expectedBooking, result);
+
+    }
+
     private Booking buildBooking() {
 
         return Booking.builder()
