@@ -2,7 +2,6 @@ package com.tadeucruz.booking.service;
 
 import static com.tadeucruz.booking.enums.RoomStatus.DISABLED;
 import static com.tadeucruz.booking.enums.RoomStatus.ENABLED;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.Mockito.when;
 
@@ -33,12 +32,16 @@ class RoomServiceTest {
     void test_checkIfRoomExistsAndEnabled_invalidRoomId() {
 
         var roomId = 3;
+        var error = "error";
 
         when(roomClient.getRoomById(roomId)).thenReturn(Optional.empty());
+        when(messageSourceService.getMessage("booking.room.invalid.id", roomId))
+            .thenReturn(error);
 
-        assertThrows(
+        assertThrowsExactly(
             RoomNotFoundException.class,
-            () -> roomService.checkIfRoomExistsAndEnabled(roomId)
+            () -> roomService.checkIfRoomExistsAndEnabled(roomId),
+            error
         );
     }
 
@@ -64,7 +67,7 @@ class RoomServiceTest {
     @Test
     void test_checkIfRoomExistsAndEnabled_success() {
 
-        var roomId = 3;
+        var roomId = 1;
 
         when(roomClient.getRoomById(roomId)).thenReturn(Optional.of(buildEnableRoomResponse()));
 

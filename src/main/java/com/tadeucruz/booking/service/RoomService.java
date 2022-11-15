@@ -19,7 +19,9 @@ public class RoomService {
         var optionalRoomResponse = roomClient.getRoomById(roomId);
 
         if (optionalRoomResponse.isEmpty()) {
-            throw new RoomNotFoundException();
+            throw new RoomNotFoundException(
+                messageSourceService.getMessage("booking.room.invalid.id", roomId)
+            );
         }
 
         var roomResponse = optionalRoomResponse.get();
