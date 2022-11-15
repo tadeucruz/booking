@@ -42,7 +42,7 @@ class RoomClientTest {
     }
 
     @Test
-    void testGetRoomByIdWithError() {
+    void test_getRoomById_withError() {
 
         var roomId = 1;
 
@@ -55,7 +55,7 @@ class RoomClientTest {
     }
 
     @Test
-    void testGetRoomByIdWithSucess() {
+    void test_getRoomById_withSuccess() {
 
         var roomId = 1;
         var expectedRoomResponse = buildRoomResponse();
