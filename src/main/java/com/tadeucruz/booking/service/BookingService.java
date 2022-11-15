@@ -160,7 +160,7 @@ public class BookingService {
         checkIfStartDateIsValid(startDate);
         checkIfUserIsBookingDaysInRowIsMoreTheAllowedDays(startDate, endTime);
         checkIfUserIsBookingDaysInAdvanceIsMoreTheAllowedDays(startDate);
-        getBookingStreamToCheckDateConflicts(roomId, bookingId, startDate, endTime);
+        checkIfExistBookingDateConflict(roomId, bookingId, startDate, endTime);
 
     }
 
@@ -216,15 +216,15 @@ public class BookingService {
         }
     }
 
-    private void getBookingStreamToCheckDateConflicts(Integer roomId, Integer bookingId,
-        LocalDateTime startDate, LocalDateTime endTime) {
+    private void checkIfExistBookingDateConflict(Integer roomId, Integer bookingId,
+        LocalDateTime startDate, LocalDateTime endDate) {
 
         var bookingsBetweenStartDate = bookingRepository.findByRoomIdAndStatusAndStartDateBetween(
-            roomId, ACTIVATED, startDate, endTime);
+            roomId, ACTIVATED, startDate, endDate);
         var bookingsBetweenEndDate = bookingRepository.findByRoomIdAndStatusAndEndDateBetween(
-            roomId, ACTIVATED, startDate, endTime);
+            roomId, ACTIVATED, startDate, endDate);
         var bookingBetweenDates = bookingRepository.findByRoomIdAndStatusAndBetweenStartDateAndEndDate(
-            roomId, ACTIVATED, startDate, endTime);
+            roomId, ACTIVATED, startDate, endDate);
 
         var bookings = Stream.of(
                 bookingsBetweenStartDate,

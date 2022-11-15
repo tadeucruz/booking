@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.tadeucruz.booking.config.BookingConfig;
+import com.tadeucruz.booking.exception.BookingConflictException;
+import com.tadeucruz.booking.exception.BookingInvalidDates;
 import com.tadeucruz.booking.exception.BookingNotFoundException;
 import com.tadeucruz.booking.model.db.Booking;
 import com.tadeucruz.booking.repository.BookingRepository;
@@ -126,12 +128,130 @@ class BookingServiceTest {
         verify(bookingRepository).save(booking);
     }
 
+    @Test
+    void test_createBooking_ruleStartDateIsAfterEndDate() {
+
+        var roomId = 1;
+        var userId = 1;
+        var startDate = LocalDate.now().atStartOfDay();
+        var endDate = startDate.plusDays(1).minusSeconds(1);
+        var errorMessage = "Error";
+
+        when(messageSourceService.getMessage("booking.startDate.is.after.endDate"))
+            .thenReturn(errorMessage);
+
+        assertThrowsExactly(
+            BookingInvalidDates.class,
+            () -> bookingService.createBooking(roomId, userId, endDate, startDate),
+            errorMessage
+        );
+
+    }
+
+    @Test
+    void test_createBooking_ruleStartDateIsValid() {
+
+        var roomId = 1;
+        var userId = 1;
+        var startDate = LocalDate.now().atStartOfDay();
+        var endDate = startDate.plusDays(1).minusSeconds(1);
+        var errorMessage = "Error";
+
+        when(messageSourceService.getMessage("booking.startDate.is.today"))
+            .thenReturn(errorMessage);
+
+        assertThrowsExactly(
+            BookingInvalidDates.class,
+            () -> bookingService.createBooking(roomId, userId, startDate, endDate),
+            errorMessage
+        );
+
+    }
+
+    //
+
+    @Test
+    void test_createBooking_ruleUserIsBookingDaysInRowIsMoreTheAllowedDays() {
+
+        var roomId = 1;
+        var userId = 1;
+        var startDate = LocalDate.now().plusDays(1).atStartOfDay();
+        var endDate = startDate.plusDays(4).minusSeconds(1);
+        var errorMessage = "Error";
+        var maxDayInRow = 2;
+
+        when(bookingConfig.getMaxDaysInRow()).thenReturn(maxDayInRow);
+        when(messageSourceService.getMessage("booking.max.days.in.rows", maxDayInRow))
+            .thenReturn(errorMessage);
+
+        assertThrowsExactly(
+            BookingInvalidDates.class,
+            () -> bookingService.createBooking(roomId, userId, startDate, endDate),
+            errorMessage
+        );
+
+    }
+
+    @Test
+    void test_createBooking_ruleUserIsBookingDaysInAdvanceIsMoreTheAllowedDays() {
+
+        var roomId = 1;
+        var userId = 1;
+        var startDate = LocalDate.now().plusDays(30).atStartOfDay();
+        var endDate = startDate.plusDays(1).minusSeconds(1);
+        var errorMessage = "Error";
+        var maxDaysAdvance = 2;
+
+        when(bookingConfig.getMaxDaysAdvance()).thenReturn(maxDaysAdvance);
+        when(messageSourceService.getMessage("booking.max.days.in.advance", maxDaysAdvance))
+            .thenReturn(errorMessage);
+
+        assertThrowsExactly(
+            BookingInvalidDates.class,
+            () -> bookingService.createBooking(roomId, userId, startDate, endDate),
+            errorMessage
+        );
+
+    }
+
+    @Test
+    void test_createBooking_ruleExistBookingDateConflict() {
+
+        var roomId = 1;
+        var userId = 1;
+        var startDate = LocalDate.now().plusDays(30).atStartOfDay();
+        var endDate = startDate.plusDays(1).minusSeconds(1);
+        var errorMessage = "Error";
+        var maxDaysAdvance = 30;
+        var maxDayInRow = 3;
+
+        when(bookingConfig.getMaxDaysAdvance()).thenReturn(maxDaysAdvance);
+        when(bookingConfig.getMaxDaysInRow()).thenReturn(maxDayInRow);
+
+        when(bookingRepository.findByRoomIdAndStatusAndStartDateBetween(
+            roomId, ACTIVATED, startDate, endDate)).thenReturn(List.of(buildBooking()));
+        when(bookingRepository.findByRoomIdAndStatusAndEndDateBetween(
+            roomId, ACTIVATED, startDate, endDate)).thenReturn(List.of(buildBooking()));
+        when(bookingRepository.findByRoomIdAndStatusAndBetweenStartDateAndEndDate(
+            roomId, ACTIVATED, startDate, endDate)).thenReturn(List.of(buildBooking()));
+
+        when(messageSourceService.getMessage("booking.date.conflict"))
+            .thenReturn(errorMessage);
+
+        assertThrowsExactly(
+            BookingConflictException.class,
+            () -> bookingService.createBooking(roomId, userId, startDate, endDate),
+            errorMessage
+        );
+
+    }
+
     private Booking buildBooking() {
 
         return Booking.builder()
             .id(1)
             .roomId(1)
-            .userId(100)
+            .userId(1)
             .status(ACTIVATED)
             .startDate(startDate)
             .endDate(endDate)
