@@ -1,5 +1,7 @@
 package com.tadeucruz.booking.service;
 
+import static com.tadeucruz.booking.enums.BookingAvailabilityStatus.BOOKED;
+import static com.tadeucruz.booking.enums.BookingAvailabilityStatus.FREE;
 import static com.tadeucruz.booking.enums.BookingStatus.ACTIVATED;
 import static com.tadeucruz.booking.enums.BookingStatus.CANCELED;
 import static com.tadeucruz.booking.enums.ServiceLockTypes.RESERVATIONS;
@@ -9,8 +11,8 @@ import com.tadeucruz.booking.config.BookingConfig;
 import com.tadeucruz.booking.exception.BookingConflictException;
 import com.tadeucruz.booking.exception.BookingInvalidDates;
 import com.tadeucruz.booking.exception.BookingNotFoundException;
+import com.tadeucruz.booking.model.BookingAvailability;
 import com.tadeucruz.booking.model.db.Booking;
-import com.tadeucruz.booking.model.rest.BookingAvailabilityResponse;
 import com.tadeucruz.booking.repository.BookingRepository;
 import com.tadeucruz.booking.repository.ServiceLockRepository;
 import java.time.LocalDate;
@@ -103,39 +105,43 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
 
-    public List<BookingAvailabilityResponse> getFreeTimes(Integer roomId) {
+    public List<BookingAvailability> getBookingAvailability(Integer roomId) {
 
-        var result = new ArrayList<BookingAvailabilityResponse>();
+        roomService.checkIfRoomExistsAndEnabled(roomId);
+
+        var result = new ArrayList<BookingAvailability>();
 
         var today = LocalDate.now().atStartOfDay();
 
-        var dayAlreadyBooked = new HashSet<LocalDate>();
+        var setDaysAlreadyBooked = new HashSet<LocalDate>();
 
-        var bookings = bookingRepository.findByRoomIdAndStartDateAfter(roomId, today);
+        var bookings = bookingRepository.findByRoomIdAndStatusAndStartDateAfter(roomId, ACTIVATED,
+            today);
 
         for (Booking booking : bookings) {
-            LocalDate date = booking.getStartDate().toLocalDate();
+            LocalDate controlDate = booking.getStartDate().toLocalDate();
+            var daysBetween = DAYS.between(booking.getStartDate(), booking.getEndDate());
 
-            for (int i = 0; i <= DAYS.between(booking.getStartDate(), booking.getEndDate()); i++) {
-                dayAlreadyBooked.add(date);
-                date = date.plusDays(1);
+            for (int i = 0; i <= daysBetween; i++) {
+                setDaysAlreadyBooked.add(controlDate);
+                controlDate = controlDate.plusDays(1);
             }
 
         }
 
-        LocalDate date = today.toLocalDate().plusDays(1);
-        for (int i = 1; i < 30; i++) {
+        LocalDate controlDate = today.toLocalDate().plusDays(1);
+        for (int i = 1; i < bookingConfig.getMaxDaysAdvance(); i++) {
 
-            String status = dayAlreadyBooked.contains(date) ? "BOOKED" : "FREE";
+            var status = setDaysAlreadyBooked.contains(controlDate) ? BOOKED : FREE;
 
-            var tmp = BookingAvailabilityResponse.builder()
-                .day(date)
+            var bookingAvailability = BookingAvailability.builder()
+                .day(controlDate)
                 .status(status)
                 .build();
 
-            date = date.plusDays(1);
+            controlDate = controlDate.plusDays(1);
 
-            result.add(tmp);
+            result.add(bookingAvailability);
         }
 
         return result;

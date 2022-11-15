@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -30,10 +31,10 @@ public class BookingController {
 
         var bookings = bookingService.getAllBooking();
 
-        var bookingResponses = bookings.stream()
+        var response = bookings.stream()
             .map(booking -> modelMapper.map(booking, BookingResponse.class)).toList();
 
-        return ResponseEntity.ok(bookingResponses);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -41,9 +42,9 @@ public class BookingController {
 
         var booking = bookingService.getBookingById(id);
 
-        var bookingResponse = modelMapper.map(booking, BookingResponse.class);
+        var response = modelMapper.map(booking, BookingResponse.class);
 
-        return ResponseEntity.ok(bookingResponse);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
@@ -57,9 +58,9 @@ public class BookingController {
             request.getEndDate().atStartOfDay().plusDays(1).minusSeconds(1)
         );
 
-        var bookingResponse = modelMapper.map(booking, BookingResponse.class);
+        var response = modelMapper.map(booking, BookingResponse.class);
 
-        return ResponseEntity.ok(bookingResponse);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("{bookingId}/cancel")
@@ -67,9 +68,9 @@ public class BookingController {
 
         var booking = bookingService.cancelBooking(bookingId);
 
-        var bookingResponse = modelMapper.map(booking, BookingResponse.class);
+        var response = modelMapper.map(booking, BookingResponse.class);
 
-        return ResponseEntity.ok(bookingResponse);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{bookingId}")
@@ -83,18 +84,21 @@ public class BookingController {
             request.getEndDate().atStartOfDay().plusDays(1).minusSeconds(1)
         );
 
-        var bookingResponse = modelMapper.map(booking, BookingResponse.class);
+        var response = modelMapper.map(booking, BookingResponse.class);
 
-        return ResponseEntity.ok(bookingResponse);
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/availability/{roomId}")
+    @GetMapping("/availability")
     public ResponseEntity<List<BookingAvailabilityResponse>> getAllAvailability(
-        @PathVariable Integer roomId) {
+        @RequestParam Integer roomId) {
 
-        var list = bookingService.getFreeTimes(roomId);
+        var bookingAvailabilities = bookingService.getBookingAvailability(roomId);
 
-        return ResponseEntity.ok(list);
+        var response = bookingAvailabilities.stream()
+            .map(booking -> modelMapper.map(booking, BookingAvailabilityResponse.class)).toList();
+
+        return ResponseEntity.ok(response);
     }
 
 }
