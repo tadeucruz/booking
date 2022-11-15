@@ -1,5 +1,6 @@
 package com.tadeucruz.booking.client;
 
+import com.tadeucruz.booking.config.BookingConfig;
 import com.tadeucruz.booking.model.rest.RoomResponse;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -12,8 +13,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class RoomClient {
 
-    // TODO: Move this to config
-    private static final String ENDPOINT = "https://6372d30c348e947299fd79e5.mockapi.io/api/v1/room/";
+    private final BookingConfig bookingConfig;
 
     private final RestTemplate restTemplate;
 
@@ -21,7 +21,8 @@ public class RoomClient {
 
         try {
 
-            var response = restTemplate.getForEntity(ENDPOINT + roomId, RoomResponse.class);
+            var response = restTemplate.getForEntity(bookingConfig.getRoomEndpoint() + roomId,
+                RoomResponse.class);
 
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {

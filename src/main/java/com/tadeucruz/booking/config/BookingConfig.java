@@ -14,4 +14,7 @@ public class BookingConfig {
     @Value("${booking.max.days.in.advance}")
     private Integer maxDaysAdvance;
 
+    @Value("${booking.room.endpoint}")
+    private String roomEndpoint;
+
 }
