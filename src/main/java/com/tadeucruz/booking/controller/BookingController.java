@@ -3,6 +3,7 @@ package com.tadeucruz.booking.controller;
 import com.tadeucruz.booking.model.rest.BookingAvailabilityResponse;
 import com.tadeucruz.booking.model.rest.BookingResponse;
 import com.tadeucruz.booking.model.rest.CreateBookingRequest;
+import com.tadeucruz.booking.model.rest.UpdateBookingRequest;
 import com.tadeucruz.booking.service.BookingService;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -64,6 +66,22 @@ public class BookingController {
     public ResponseEntity<BookingResponse> cancelBooking(@PathVariable Integer bookingId) {
 
         var booking = bookingService.cancelBooking(bookingId);
+
+        var bookingResponse = modelMapper.map(booking, BookingResponse.class);
+
+        return ResponseEntity.ok(bookingResponse);
+    }
+
+    @PutMapping("/{bookingId}")
+    public ResponseEntity<BookingResponse> updateBooking(@PathVariable Integer bookingId,
+        @RequestBody
+        UpdateBookingRequest request) {
+
+        var booking = bookingService.updateBooking(
+            bookingId,
+            request.getStartDate().atStartOfDay(),
+            request.getEndDate().atStartOfDay().plusDays(1).minusSeconds(1)
+        );
 
         var bookingResponse = modelMapper.map(booking, BookingResponse.class);
 

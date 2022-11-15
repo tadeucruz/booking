@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,6 +56,15 @@ public class BookingService {
         return bookingRepository.findById(id);
     }
 
+    public Booking cancelBooking(Integer bookingId) {
+
+        var booking = getBookingById(bookingId);
+
+        booking.setStatus(CANCELED);
+
+        return bookingRepository.save(booking);
+    }
+
     @Transactional
     public Booking createBooking(Integer roomId, Integer userId, LocalDateTime startDate,
         LocalDateTime endTime) {
@@ -77,11 +87,18 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
 
-    public Booking cancelBooking(Integer bookingId) {
+    @Transactional
+    public Booking updateBooking(Integer bookingId, LocalDateTime startDate,
+        LocalDateTime endTime) {
+
+        serviceLockRepository.findByName(RESERVATIONS.name());
 
         var booking = getBookingById(bookingId);
 
-        booking.setStatus(CANCELED);
+        checkIfBookingDatesAreValid(booking.getRoomId(), bookingId, startDate, endTime);
+
+        booking.setStartDate(startDate);
+        booking.setEndDate(endTime);
 
         return bookingRepository.save(booking);
     }
@@ -127,17 +144,24 @@ public class BookingService {
     private void checkIfBookingDatesAreValid(Integer roomId, LocalDateTime startDate,
         LocalDateTime endTime) {
 
+        checkIfBookingDatesAreValid(roomId, null, startDate, endTime);
+    }
+
+    private void checkIfBookingDatesAreValid(Integer roomId, Integer bookingId,
+        LocalDateTime startDate, LocalDateTime endTime) {
+
         checkIfStartDateIsAfterEndDate(startDate, endTime);
         checkIfStartDateIsValid(startDate);
         checkIfUserIsBookingDaysInRowIsMoreTheAllowedDays(startDate, endTime);
         checkIfUserIsBookingDaysInAdvanceIsMoreTheAllowedDays(startDate);
-        checkIfStarDateAndEndDateIsAvailable(roomId, startDate, endTime);
+        getBookingStreamToCheckDateConflicts(roomId, bookingId, startDate, endTime);
 
     }
 
     private void checkIfStartDateIsAfterEndDate(LocalDateTime startDate, LocalDateTime endTime) {
 
         if (startDate.isAfter(endTime)) {
+
             throw new BookingInvalidDates(
                 messageSourceService.getMessage("booking.startDate.is.after.endDate")
             );
@@ -150,6 +174,7 @@ public class BookingService {
         var tomorrow = LocalDate.now().atStartOfDay().plusDays(1);
 
         if (startDate.isBefore(tomorrow)) {
+
             throw new BookingInvalidDates(
                 messageSourceService.getMessage("booking.startDate.is.today")
             );
@@ -163,6 +188,7 @@ public class BookingService {
             .minusSeconds(1);
 
         if (endTime.isAfter(maxEndTime)) {
+
             throw new BookingInvalidDates(
                 messageSourceService.getMessage("booking.max.days.in.rows",
                     bookingConfig.getMaxDaysInRow())
@@ -176,6 +202,7 @@ public class BookingService {
             .plusDays(bookingConfig.getMaxDaysAdvance());
 
         if (starDate.isAfter(maxStartTime)) {
+
             throw new BookingInvalidDates(
                 messageSourceService.getMessage("booking.max.days.in.advance",
                     bookingConfig.getMaxDaysAdvance())
@@ -183,18 +210,25 @@ public class BookingService {
         }
     }
 
-    private void checkIfStarDateAndEndDateIsAvailable(Integer roomId, LocalDateTime startDate,
-        LocalDateTime endTime) {
+    private void getBookingStreamToCheckDateConflicts(Integer roomId, Integer bookingId,
+        LocalDateTime startDate, LocalDateTime endTime) {
 
-        var bookingsBetweenStartDate = bookingRepository.findByRoomIdAndStartDateBetween(roomId,
-            startDate, endTime);
-        var bookingsBetweenEndDate = bookingRepository.findByRoomIdAndEndDateBetween(roomId,
-            startDate, endTime);
-        var bookingBetweenDates = bookingRepository.findByRoomIdAndBetweenStartDateAndEndDate(
-            roomId, startDate, endTime);
+        var bookingsBetweenStartDate = bookingRepository.findByRoomIdAndStatusAndStartDateBetween(
+            roomId, ACTIVATED, startDate, endTime);
+        var bookingsBetweenEndDate = bookingRepository.findByRoomIdAndStatusAndEndDateBetween(
+            roomId, ACTIVATED, startDate, endTime);
+        var bookingBetweenDates = bookingRepository.findByRoomIdAndStatusAndBetweenStartDateAndEndDate(
+            roomId, ACTIVATED, startDate, endTime);
 
-        if (!bookingsBetweenStartDate.isEmpty() || !bookingsBetweenEndDate.isEmpty()
-            || !bookingBetweenDates.isEmpty()) {
+        var bookings = Stream.of(
+                bookingsBetweenStartDate,
+                bookingsBetweenEndDate,
+                bookingBetweenDates)
+            .flatMap(List::stream)
+            .filter(booking -> !booking.getId().equals(bookingId))
+            .toList();
+
+        if (!bookings.isEmpty()) {
 
             throw new BookingConflictException(
                 messageSourceService.getMessage("booking.date.conflict")
