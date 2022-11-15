@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class BookingResponse {
 
     private String id;
+    private String status;
     private String roomId;
     private String userId;
     private LocalDateTime startDate;

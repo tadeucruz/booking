@@ -1,10 +1,10 @@
 package com.tadeucruz.booking.controller;
 
+import com.tadeucruz.booking.model.rest.BookingAvailabilityResponse;
 import com.tadeucruz.booking.model.rest.BookingResponse;
 import com.tadeucruz.booking.model.rest.ReservationBookingRequest;
 import com.tadeucruz.booking.service.BookingService;
 import java.util.List;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +35,7 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookingResponse> getBookingById(@PathVariable UUID id) {
+    public ResponseEntity<BookingResponse> getBookingById(@PathVariable Integer id) {
 
         var booking = bookingService.getBookingById(id);
 
@@ -44,12 +44,13 @@ public class BookingController {
         return ResponseEntity.ok(bookingResponse);
     }
 
-    @PostMapping
-    public ResponseEntity<BookingResponse> createBooking(
+    @PostMapping("/{roomId}")
+    public ResponseEntity<BookingResponse> createBooking(@PathVariable Integer roomId,
         @RequestBody ReservationBookingRequest request) {
 
         var booking = bookingService.createBooking(
-            UUID.fromString(request.getUserId()),
+            roomId,
+            request.getUserId(),
             request.getStartDate().atStartOfDay(),
             request.getEndDate().atStartOfDay().plusDays(1).minusSeconds(1)
         );
@@ -57,6 +58,15 @@ public class BookingController {
         var bookingResponse = modelMapper.map(booking, BookingResponse.class);
 
         return ResponseEntity.ok(bookingResponse);
+    }
+
+    @GetMapping("/availability/{roomId}")
+    public ResponseEntity<List<BookingAvailabilityResponse>> getAllAvailability(
+        @PathVariable Integer roomId) {
+
+        var list = bookingService.getFreeTimes(roomId);
+
+        return ResponseEntity.ok(list);
     }
 
 }

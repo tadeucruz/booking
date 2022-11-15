@@ -6,10 +6,9 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ReservationBookingRequest {
+public class BookingAvailabilityResponse {
 
-    private Integer userId;
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private LocalDate day;
+    private String status;
 
 }

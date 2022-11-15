@@ -1,17 +1,26 @@
 package com.tadeucruz.booking.factory;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 @Component
 public class DependencyFactory {
 
     @Bean
     public ModelMapper modelMapper() {
+
         return new ModelMapper();
+    }
+
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+
+        return builder.build();
     }
 
     @Bean
