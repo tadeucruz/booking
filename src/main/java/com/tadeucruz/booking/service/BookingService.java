@@ -6,6 +6,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 
 import com.tadeucruz.booking.config.BookingConfig;
 import com.tadeucruz.booking.exception.BookingConflictException;
+import com.tadeucruz.booking.exception.BookingInvalidDates;
 import com.tadeucruz.booking.exception.BookingNotFoundException;
 import com.tadeucruz.booking.model.db.Booking;
 import com.tadeucruz.booking.model.rest.BookingAvailabilityResponse;
@@ -116,7 +117,7 @@ public class BookingService {
     private void checkIfBookingDatesAreValid(Integer roomId, LocalDateTime startDate,
         LocalDateTime endTime) {
 
-        checkIfStartDateIsBeforeEndDate(startDate, endTime);
+        checkIfStartDateIsAfterEndDate(startDate, endTime);
         checkIfStartDateIsValid(startDate);
         checkIfUserIsBookingDaysInRowIsMoreTheAllowedDays(startDate, endTime);
         checkIfUserIsBookingDaysInAdvanceIsMoreTheAllowedDays(startDate);
@@ -124,10 +125,12 @@ public class BookingService {
 
     }
 
-    private void checkIfStartDateIsBeforeEndDate(LocalDateTime startDate, LocalDateTime endTime) {
+    private void checkIfStartDateIsAfterEndDate(LocalDateTime startDate, LocalDateTime endTime) {
 
         if (startDate.isAfter(endTime)) {
-            throw new RuntimeException("Start Date is inalid");
+            throw new BookingInvalidDates(
+                messageSourceService.getMessage("booking.startDate.is.after.endDate")
+            );
         }
 
     }
@@ -137,7 +140,9 @@ public class BookingService {
         var tomorrow = LocalDate.now().atStartOfDay().plusDays(1);
 
         if (startDate.isBefore(tomorrow)) {
-            throw new RuntimeException("Start Date is inalid");
+            throw new BookingInvalidDates(
+                messageSourceService.getMessage("booking.startDate.is.today")
+            );
         }
     }
 
@@ -148,7 +153,10 @@ public class BookingService {
             .minusSeconds(1);
 
         if (endTime.isAfter(maxEndTime)) {
-            throw new RuntimeException("Start Date is inalid");
+            throw new BookingInvalidDates(
+                messageSourceService.getMessage("booking.max.days.in.rows",
+                    bookingConfig.getMaxDaysInRow())
+            );
         }
     }
 
@@ -158,7 +166,10 @@ public class BookingService {
             .plusDays(bookingConfig.getMaxDaysAdvance());
 
         if (starDate.isAfter(maxStartTime)) {
-            throw new RuntimeException("Start Date is inalid");
+            throw new BookingInvalidDates(
+                messageSourceService.getMessage("booking.max.days.in.advance",
+                    bookingConfig.getMaxDaysAdvance())
+            );
         }
     }
 
@@ -176,7 +187,8 @@ public class BookingService {
             || !bookingBetweenDates.isEmpty()) {
 
             throw new BookingConflictException(
-                messageSourceService.getMessage("booking.date.conflict"));
+                messageSourceService.getMessage("booking.date.conflict")
+            );
         }
     }
 
