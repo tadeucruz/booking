@@ -24,6 +24,7 @@ class MessageSourceServiceTest {
     void test_getMessage() {
 
         var messageCode = "test";
+
         Object[] args = new Object[1];
         args[0] = null;
 
@@ -38,6 +39,7 @@ class MessageSourceServiceTest {
 
         var messageCode = "test";
         var param = "1";
+
         Object[] args = new Object[1];
         args[0] = param;
 
