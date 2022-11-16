@@ -15,6 +15,7 @@ import com.tadeucruz.booking.model.BookingAvailability;
 import com.tadeucruz.booking.model.db.Booking;
 import com.tadeucruz.booking.repository.BookingRepository;
 import com.tadeucruz.booking.repository.ServiceLockRepository;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ public class BookingService {
     private final RoomService roomService;
     private final MessageSourceService messageSourceService;
     private final BookingConfig bookingConfig;
+    private final Clock clock;
 
 
     public List<Booking> getAllBooking() {
@@ -111,7 +113,7 @@ public class BookingService {
 
         var result = new ArrayList<BookingAvailability>();
 
-        var today = LocalDate.now().atStartOfDay();
+        var today = LocalDate.now(clock).atStartOfDay();
 
         var setDaysAlreadyBooked = new HashSet<LocalDate>();
 
@@ -177,7 +179,7 @@ public class BookingService {
 
     private void checkIfStartDateIsValid(LocalDateTime startDate) {
 
-        var tomorrow = LocalDate.now().atStartOfDay().plusDays(1);
+        var tomorrow = LocalDate.now(clock).atStartOfDay().plusDays(1);
 
         if (startDate.isBefore(tomorrow)) {
 
@@ -204,7 +206,7 @@ public class BookingService {
 
     private void checkIfUserIsBookingDaysInAdvanceIsMoreTheAllowedDays(LocalDateTime starDate) {
 
-        var maxStartTime = LocalDate.now().atStartOfDay()
+        var maxStartTime = LocalDate.now(clock).atStartOfDay()
             .plusDays(bookingConfig.getMaxDaysAdvance());
 
         if (starDate.isAfter(maxStartTime)) {

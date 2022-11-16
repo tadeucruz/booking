@@ -19,23 +19,28 @@ import com.tadeucruz.booking.model.BookingAvailability;
 import com.tadeucruz.booking.model.db.Booking;
 import com.tadeucruz.booking.repository.BookingRepository;
 import com.tadeucruz.booking.repository.ServiceLockRepository;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
 
-    private static final LocalDateTime startDate = LocalDate.now().plusDays(1).atStartOfDay();
+
+    private static final Clock clock = Clock.fixed(Instant.parse("2007-12-03T10:15:30.00Z"),
+        ZoneId.systemDefault());
+    private static final LocalDateTime startDate = LocalDate.now(clock).plusDays(1).atStartOfDay();
     private static final LocalDateTime endDate = startDate.plusDays(1).minusSeconds(1);
 
-    @InjectMocks
     private BookingService bookingService;
 
     @Mock
@@ -52,6 +57,12 @@ class BookingServiceTest {
 
     @Mock
     private BookingConfig bookingConfig;
+
+    @BeforeEach
+    void setUp() {
+        bookingService = new BookingService(bookingRepository, serviceLockRepository, roomService,
+            messageSourceService, bookingConfig, clock);
+    }
 
     @Test
     void test_getAllBooking() {
@@ -137,7 +148,7 @@ class BookingServiceTest {
 
         var roomId = 1;
         var userId = 1;
-        var startDate = LocalDate.now().atStartOfDay();
+        var startDate = LocalDate.now(clock).atStartOfDay();
         var endDate = startDate.plusDays(1).minusSeconds(1);
         var errorMessage = "Error";
 
@@ -157,7 +168,7 @@ class BookingServiceTest {
 
         var roomId = 1;
         var userId = 1;
-        var startDate = LocalDate.now().atStartOfDay();
+        var startDate = LocalDate.now(clock).atStartOfDay();
         var endDate = startDate.plusDays(1).minusSeconds(1);
         var errorMessage = "Error";
 
@@ -179,7 +190,7 @@ class BookingServiceTest {
 
         var roomId = 1;
         var userId = 1;
-        var startDate = LocalDate.now().plusDays(1).atStartOfDay();
+        var startDate = LocalDate.now(clock).plusDays(1).atStartOfDay();
         var endDate = startDate.plusDays(4).minusSeconds(1);
         var errorMessage = "Error";
         var maxDayInRow = 2;
@@ -201,7 +212,7 @@ class BookingServiceTest {
 
         var roomId = 1;
         var userId = 1;
-        var startDate = LocalDate.now().plusDays(30).atStartOfDay();
+        var startDate = LocalDate.now(clock).plusDays(30).atStartOfDay();
         var endDate = startDate.plusDays(1).minusSeconds(1);
         var errorMessage = "Error";
         var maxDaysAdvance = 2;
@@ -223,7 +234,7 @@ class BookingServiceTest {
 
         var roomId = 1;
         var userId = 1;
-        var startDate = LocalDate.now().plusDays(30).atStartOfDay();
+        var startDate = LocalDate.now(clock).plusDays(30).atStartOfDay();
         var endDate = startDate.plusDays(1).minusSeconds(1);
         var errorMessage = "Error";
         var maxDaysAdvance = 30;
@@ -286,7 +297,7 @@ class BookingServiceTest {
 
         var bookingId = 1;
         var booking = buildBooking();
-        var startDate = LocalDate.now().atStartOfDay();
+        var startDate = LocalDate.now(clock).atStartOfDay();
         var endDate = startDate.plusDays(1).minusSeconds(1);
         var errorMessage = "Error";
 
@@ -307,7 +318,7 @@ class BookingServiceTest {
 
         var bookingId = 1;
         var booking = buildBooking();
-        var startDate = LocalDate.now().atStartOfDay();
+        var startDate = LocalDate.now(clock).atStartOfDay();
         var endDate = startDate.plusDays(1).minusSeconds(1);
         var errorMessage = "Error";
 
@@ -328,7 +339,7 @@ class BookingServiceTest {
 
         var bookingId = 1;
         var booking = buildBooking();
-        var startDate = LocalDate.now().plusDays(1).atStartOfDay();
+        var startDate = LocalDate.now(clock).plusDays(1).atStartOfDay();
         var endDate = startDate.plusDays(4).minusSeconds(1);
         var errorMessage = "Error";
         var maxDayInRow = 2;
@@ -351,7 +362,7 @@ class BookingServiceTest {
 
         var bookingId = 1;
         var booking = buildBooking();
-        var startDate = LocalDate.now().plusDays(30).atStartOfDay();
+        var startDate = LocalDate.now(clock).plusDays(30).atStartOfDay();
         var endDate = startDate.plusDays(1).minusSeconds(1);
         var errorMessage = "Error";
         var maxDaysAdvance = 2;
@@ -375,7 +386,7 @@ class BookingServiceTest {
         var roomId = 1;
         var bookingId = 1;
         var booking = buildBooking();
-        var startDate = LocalDate.now().plusDays(30).atStartOfDay();
+        var startDate = LocalDate.now(clock).plusDays(30).atStartOfDay();
         var endDate = startDate.plusDays(1).minusSeconds(1);
         var errorMessage = "Error";
         var maxDaysAdvance = 30;
@@ -442,7 +453,7 @@ class BookingServiceTest {
         var roomId = 1;
         var maxDaysAdvance = 3;
 
-        var controlDate = LocalDate.now().plusDays(1);
+        var controlDate = LocalDate.now(clock).plusDays(1);
         var expected = List.of(
             BookingAvailability.builder()
                 .day(controlDate)
@@ -455,7 +466,7 @@ class BookingServiceTest {
         );
 
         when(bookingRepository.findByRoomIdAndStatusAndStartDateAfter(roomId, ACTIVATED,
-            LocalDate.now().atStartOfDay())).thenReturn(List.of(buildBooking()));
+            LocalDate.now(clock).atStartOfDay())).thenReturn(List.of(buildBooking()));
         when(bookingConfig.getMaxDaysAdvance()).thenReturn(maxDaysAdvance);
 
         var result = bookingService.getBookingAvailability(roomId);

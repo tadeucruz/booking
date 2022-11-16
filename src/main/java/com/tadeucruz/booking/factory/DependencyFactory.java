@@ -1,5 +1,6 @@
 package com.tadeucruz.booking.factory;
 
+import java.time.Clock;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.MessageSource;
@@ -32,6 +33,11 @@ public class DependencyFactory {
         messageSource.setDefaultEncoding("UTF-8");
 
         return messageSource;
+    }
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemDefaultZone();
     }
 
 }

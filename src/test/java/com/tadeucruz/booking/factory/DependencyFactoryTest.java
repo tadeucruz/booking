@@ -37,4 +37,12 @@ class DependencyFactoryTest {
 
         assertNotNull(result);
     }
+
+    @Test
+    void test_clock() {
+
+        var result = dependencyFactory.clock();
+
+        assertNotNull(result);
+    }
 }
