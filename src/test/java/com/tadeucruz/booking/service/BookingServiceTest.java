@@ -1,5 +1,7 @@
 package com.tadeucruz.booking.service;
 
+import static com.tadeucruz.booking.enums.BookingAvailabilityStatus.BOOKED;
+import static com.tadeucruz.booking.enums.BookingAvailabilityStatus.FREE;
 import static com.tadeucruz.booking.enums.BookingStatus.ACTIVATED;
 import static com.tadeucruz.booking.enums.BookingStatus.CANCELED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,6 +15,7 @@ import com.tadeucruz.booking.config.BookingConfig;
 import com.tadeucruz.booking.exception.BookingConflictException;
 import com.tadeucruz.booking.exception.BookingInvalidDates;
 import com.tadeucruz.booking.exception.BookingNotFoundException;
+import com.tadeucruz.booking.model.BookingAvailability;
 import com.tadeucruz.booking.model.db.Booking;
 import com.tadeucruz.booking.repository.BookingRepository;
 import com.tadeucruz.booking.repository.ServiceLockRepository;
@@ -431,6 +434,33 @@ class BookingServiceTest {
 
         assertEquals(expectedBooking, result);
 
+    }
+
+    @Test
+    void test_getBookingAvailability() {
+
+        var roomId = 1;
+        var maxDaysAdvance = 3;
+
+        var controlDate = LocalDate.now().plusDays(1);
+        var expected = List.of(
+            BookingAvailability.builder()
+                .day(controlDate)
+                .status(BOOKED)
+                .build(),
+            BookingAvailability.builder()
+                .day(controlDate.plusDays(1))
+                .status(FREE)
+                .build()
+        );
+
+        when(bookingRepository.findByRoomIdAndStatusAndStartDateAfter(roomId, ACTIVATED,
+            LocalDate.now().atStartOfDay())).thenReturn(List.of(buildBooking()));
+        when(bookingConfig.getMaxDaysAdvance()).thenReturn(maxDaysAdvance);
+
+        var result = bookingService.getBookingAvailability(roomId);
+
+        assertEquals(expected, result);
     }
 
     private Booking buildBooking() {
