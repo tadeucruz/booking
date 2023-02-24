@@ -1,7 +1,9 @@
 package com.tadeucruz.booking.model;
 
-import com.tadeucruz.booking.enums.BookingAvailabilityStatus;
 import java.time.LocalDate;
+
+import com.tadeucruz.booking.enums.BookingAvailabilityStatus;
+
 import lombok.Builder;
 import lombok.Data;
 

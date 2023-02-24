@@ -7,14 +7,6 @@ import static com.tadeucruz.booking.enums.BookingStatus.CANCELED;
 import static com.tadeucruz.booking.enums.ServiceLockTypes.RESERVATIONS;
 import static java.time.temporal.ChronoUnit.DAYS;
 
-import com.tadeucruz.booking.config.BookingConfig;
-import com.tadeucruz.booking.exception.BookingConflictException;
-import com.tadeucruz.booking.exception.BookingInvalidDates;
-import com.tadeucruz.booking.exception.BookingNotFoundException;
-import com.tadeucruz.booking.model.BookingAvailability;
-import com.tadeucruz.booking.model.db.Booking;
-import com.tadeucruz.booking.repository.BookingRepository;
-import com.tadeucruz.booking.repository.ServiceLockRepository;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,9 +15,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import lombok.AllArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.tadeucruz.booking.config.BookingConfig;
+import com.tadeucruz.booking.exception.BookingConflictException;
+import com.tadeucruz.booking.exception.BookingInvalidDates;
+import com.tadeucruz.booking.exception.BookingNotFoundException;
+import com.tadeucruz.booking.model.BookingAvailability;
+import com.tadeucruz.booking.model.db.Booking;
+import com.tadeucruz.booking.repository.BookingRepository;
+import com.tadeucruz.booking.repository.ServiceLockRepository;
+
+import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
@@ -38,7 +41,6 @@ public class BookingService {
     private final BookingConfig bookingConfig;
     private final Clock clock;
 
-
     public List<Booking> getAllBooking() {
 
         return bookingRepository.findAll();
@@ -49,7 +51,7 @@ public class BookingService {
 
         if (optionalBooking.isEmpty()) {
             throw new BookingNotFoundException(
-                messageSourceService.getMessage("booking.invalid.id", id));
+                    messageSourceService.getMessage("booking.invalid.id", id));
         }
 
         return optionalBooking.get();
@@ -71,7 +73,7 @@ public class BookingService {
 
     @Transactional
     public Booking createBooking(Integer roomId, Integer userId, LocalDateTime startDate,
-        LocalDateTime endTime) {
+            LocalDateTime endTime) {
 
         serviceLockRepository.findByName(RESERVATIONS.name());
 
@@ -81,19 +83,19 @@ public class BookingService {
         checkIfBookingDatesAreValid(roomId, startDate, endTime);
 
         var booking = Booking.builder()
-            .roomId(roomId)
-            .userId(userId)
-            .startDate(startDate)
-            .endDate(endTime)
-            .status(ACTIVATED)
-            .build();
+                .roomId(roomId)
+                .userId(userId)
+                .startDate(startDate)
+                .endDate(endTime)
+                .status(ACTIVATED)
+                .build();
 
         return bookingRepository.save(booking);
     }
 
     @Transactional
     public Booking updateBooking(Integer bookingId, LocalDateTime startDate,
-        LocalDateTime endTime) {
+            LocalDateTime endTime) {
 
         serviceLockRepository.findByName(RESERVATIONS.name());
 
@@ -118,7 +120,7 @@ public class BookingService {
         var setDaysAlreadyBooked = new HashSet<LocalDate>();
 
         var bookings = bookingRepository.findByRoomIdAndStatusAndStartDateAfter(roomId, ACTIVATED,
-            today);
+                today);
 
         for (Booking booking : bookings) {
             LocalDate controlDate = booking.getStartDate().toLocalDate();
@@ -137,9 +139,9 @@ public class BookingService {
             var status = setDaysAlreadyBooked.contains(controlDate) ? BOOKED : FREE;
 
             var bookingAvailability = BookingAvailability.builder()
-                .day(controlDate)
-                .status(status)
-                .build();
+                    .day(controlDate)
+                    .status(status)
+                    .build();
 
             controlDate = controlDate.plusDays(1);
 
@@ -150,13 +152,13 @@ public class BookingService {
     }
 
     private void checkIfBookingDatesAreValid(Integer roomId, LocalDateTime startDate,
-        LocalDateTime endTime) {
+            LocalDateTime endTime) {
 
         checkIfBookingDatesAreValid(roomId, null, startDate, endTime);
     }
 
     private void checkIfBookingDatesAreValid(Integer roomId, Integer bookingId,
-        LocalDateTime startDate, LocalDateTime endTime) {
+            LocalDateTime startDate, LocalDateTime endTime) {
 
         checkIfStartDateIsAfterEndDate(startDate, endTime);
         checkIfStartDateIsValid(startDate);
@@ -171,8 +173,7 @@ public class BookingService {
         if (startDate.isAfter(endTime)) {
 
             throw new BookingInvalidDates(
-                messageSourceService.getMessage("booking.startDate.is.after.endDate")
-            );
+                    messageSourceService.getMessage("booking.startDate.is.after.endDate"));
         }
 
     }
@@ -184,65 +185,60 @@ public class BookingService {
         if (startDate.isBefore(tomorrow)) {
 
             throw new BookingInvalidDates(
-                messageSourceService.getMessage("booking.startDate.is.today")
-            );
+                    messageSourceService.getMessage("booking.startDate.is.today"));
         }
     }
 
     private void checkIfUserIsBookingDaysInRowIsMoreTheAllowedDays(LocalDateTime startDate,
-        LocalDateTime endTime) {
+            LocalDateTime endTime) {
 
         var maxEndTime = startDate.plusDays(bookingConfig.getMaxDaysInRow()).plusDays(1)
-            .minusSeconds(1);
+                .minusSeconds(1);
 
         if (endTime.isAfter(maxEndTime)) {
 
             throw new BookingInvalidDates(
-                messageSourceService.getMessage("booking.max.days.in.rows",
-                    bookingConfig.getMaxDaysInRow())
-            );
+                    messageSourceService.getMessage("booking.max.days.in.rows",
+                            bookingConfig.getMaxDaysInRow()));
         }
     }
 
     private void checkIfUserIsBookingDaysInAdvanceIsMoreTheAllowedDays(LocalDateTime starDate) {
 
         var maxStartTime = LocalDate.now(clock).atStartOfDay()
-            .plusDays(bookingConfig.getMaxDaysAdvance());
+                .plusDays(bookingConfig.getMaxDaysAdvance());
 
         if (starDate.isAfter(maxStartTime)) {
 
             throw new BookingInvalidDates(
-                messageSourceService.getMessage("booking.max.days.in.advance",
-                    bookingConfig.getMaxDaysAdvance())
-            );
+                    messageSourceService.getMessage("booking.max.days.in.advance",
+                            bookingConfig.getMaxDaysAdvance()));
         }
     }
 
     private void checkIfExistBookingDateConflict(Integer roomId, Integer bookingId,
-        LocalDateTime startDate, LocalDateTime endDate) {
+            LocalDateTime startDate, LocalDateTime endDate) {
 
         var bookingsBetweenStartDate = bookingRepository.findByRoomIdAndStatusAndStartDateBetween(
-            roomId, ACTIVATED, startDate, endDate);
+                roomId, ACTIVATED, startDate, endDate);
         var bookingsBetweenEndDate = bookingRepository.findByRoomIdAndStatusAndEndDateBetween(
-            roomId, ACTIVATED, startDate, endDate);
+                roomId, ACTIVATED, startDate, endDate);
         var bookingBetweenDates = bookingRepository.findByRoomIdAndStatusAndBetweenStartDateAndEndDate(
-            roomId, ACTIVATED, startDate, endDate);
+                roomId, ACTIVATED, startDate, endDate);
 
         var bookings = Stream.of(
                 bookingsBetweenStartDate,
                 bookingsBetweenEndDate,
                 bookingBetweenDates)
-            .flatMap(List::stream)
-            .filter(booking -> !booking.getId().equals(bookingId))
-            .toList();
+                .flatMap(List::stream)
+                .filter(booking -> !booking.getId().equals(bookingId))
+                .toList();
 
         if (!bookings.isEmpty()) {
 
             throw new BookingConflictException(
-                messageSourceService.getMessage("booking.date.conflict")
-            );
+                    messageSourceService.getMessage("booking.date.conflict"));
         }
     }
-
 
 }

@@ -22,7 +22,7 @@ public class RoomClient {
         try {
 
             var response = restTemplate.getForEntity(bookingConfig.getRoomEndpoint() + roomId,
-                RoomResponse.class);
+                    RoomResponse.class);
 
             return Optional.ofNullable(response.getBody());
         } catch (Exception e) {

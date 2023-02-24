@@ -1,12 +1,7 @@
 package com.tadeucruz.booking.controller;
 
-import com.tadeucruz.booking.model.rest.BookingAvailabilityResponse;
-import com.tadeucruz.booking.model.rest.BookingResponse;
-import com.tadeucruz.booking.model.rest.CreateBookingRequest;
-import com.tadeucruz.booking.model.rest.UpdateBookingRequest;
-import com.tadeucruz.booking.service.BookingService;
 import java.util.List;
-import lombok.AllArgsConstructor;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +12,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.tadeucruz.booking.model.rest.BookingAvailabilityResponse;
+import com.tadeucruz.booking.model.rest.BookingResponse;
+import com.tadeucruz.booking.model.rest.CreateBookingRequest;
+import com.tadeucruz.booking.model.rest.UpdateBookingRequest;
+import com.tadeucruz.booking.service.BookingService;
+
+import lombok.AllArgsConstructor;
 
 @RestController
 @RequestMapping("v1/booking")
@@ -32,7 +35,7 @@ public class BookingController {
         var bookings = bookingService.getAllBooking();
 
         var response = bookings.stream()
-            .map(booking -> modelMapper.map(booking, BookingResponse.class)).toList();
+                .map(booking -> modelMapper.map(booking, BookingResponse.class)).toList();
 
         return ResponseEntity.ok(response);
     }
@@ -49,14 +52,13 @@ public class BookingController {
 
     @PostMapping
     public ResponseEntity<BookingResponse> createBooking(
-        @RequestBody CreateBookingRequest request) {
+            @RequestBody CreateBookingRequest request) {
 
         var booking = bookingService.createBooking(
-            request.getRoomId(),
-            request.getUserId(),
-            request.getStartDate().atStartOfDay(),
-            request.getEndDate().atStartOfDay().plusDays(1).minusSeconds(1)
-        );
+                request.getRoomId(),
+                request.getUserId(),
+                request.getStartDate().atStartOfDay(),
+                request.getEndDate().atStartOfDay().plusDays(1).minusSeconds(1));
 
         var response = modelMapper.map(booking, BookingResponse.class);
 
@@ -75,14 +77,12 @@ public class BookingController {
 
     @PutMapping("/{bookingId}")
     public ResponseEntity<BookingResponse> updateBooking(@PathVariable Integer bookingId,
-        @RequestBody
-        UpdateBookingRequest request) {
+            @RequestBody UpdateBookingRequest request) {
 
         var booking = bookingService.updateBooking(
-            bookingId,
-            request.getStartDate().atStartOfDay(),
-            request.getEndDate().atStartOfDay().plusDays(1).minusSeconds(1)
-        );
+                bookingId,
+                request.getStartDate().atStartOfDay(),
+                request.getEndDate().atStartOfDay().plusDays(1).minusSeconds(1));
 
         var response = modelMapper.map(booking, BookingResponse.class);
 
@@ -91,12 +91,12 @@ public class BookingController {
 
     @GetMapping("/availability")
     public ResponseEntity<List<BookingAvailabilityResponse>> getAllAvailability(
-        @RequestParam Integer roomId) {
+            @RequestParam Integer roomId) {
 
         var bookingAvailabilities = bookingService.getBookingAvailability(roomId);
 
         var response = bookingAvailabilities.stream()
-            .map(booking -> modelMapper.map(booking, BookingAvailabilityResponse.class)).toList();
+                .map(booking -> modelMapper.map(booking, BookingAvailabilityResponse.class)).toList();
 
         return ResponseEntity.ok(response);
     }
